@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retail Location DSS</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--ink:#1c2430;--mute:#667085;--line:#e3e6eb;--accent:#1f5fbf;--ok:#1b8a5a;--bad:#c23b32;--warn:#b7791f;--okbg:#e6f5ee;--badbg:#fbeae9;--warnbg:#fdf3df;
+--a0:#2f6fdb;--a1:#e08a1e;--a2:#1b9e8a;--a3:#8a5fd0;--grid:#e8ebf0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b212a;--ink:#e8ecf2;--mute:#9aa5b5;--line:#2b3340;--accent:#6aa0f5;--ok:#4cc38a;--bad:#f0766d;--warn:#e3b455;--okbg:#17362a;--badbg:#3b1f1e;--warnbg:#3a2f16;--a0:#6aa0f5;--a1:#f0a64a;--a2:#3fc7b0;--a3:#b394ee;--grid:#2b3340}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Calibri,"Segoe UI",system-ui,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{font-size:20px;margin:0}
+h2{font-size:16px;margin:0 0 8px}
+h3{font-size:14px;margin:14px 0 6px}
+.sub{color:var(--mute);font-size:12.5px}
+.badge{background:var(--warnbg);color:var(--warn);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}
+.layout{display:grid;grid-template-columns:270px 1fr;gap:16px;padding:16px 24px;max-width:1400px;margin:auto}
+@media(max-width:900px){.layout{grid-template-columns:1fr;padding:12px}}
+aside .card{position:sticky;top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+label{display:block;font-weight:600;margin:10px 0 4px}
+select,input[type=number]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+select{width:100%}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+nav{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+nav button{border-radius:999px;padding:6px 14px}
+nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.panel{display:none}.panel.on{display:block}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.rank{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card)}
+.rank.win{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+.rank .n{font-size:12px;color:var(--mute)}
+.rank .v{font-size:26px;font-weight:700}
+.rank .name{font-weight:600}
+.msg{border-radius:8px;padding:10px 12px;margin:8px 0}
+.msg.ok{background:var(--okbg);color:var(--ok)}.msg.bad{background:var(--badbg);color:var(--bad)}.msg.warn{background:var(--warnbg);color:var(--warn)}
+.msg b{color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mute);font-weight:600;font-size:12px}
+td input{width:90px;text-align:right}
+.tbl{overflow-x:auto}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.bad{background:var(--badbg);color:var(--bad)}.pill.warn{background:var(--warnbg);color:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:4px 0 8px;font-size:12.5px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+svg{max-width:720px;display:block}
+svg text{fill:var(--ink);font-family:inherit}
+svg .mute{fill:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:1100px){.two{grid-template-columns:1fr}}
+.cell-ch{background:var(--badbg);color:var(--bad);font-weight:600}
+.small{font-size:12.5px;color:var(--mute)}
+.pair{display:grid;grid-template-columns:1fr 160px 90px;gap:10px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Retail Location DSS</h1><div class="sub">Fuzzy AHP + TOPSIS decision support for a new convenience &amp; specialty store (TCD Business Analytics, Individual Assignment, Topic 3)</div></div>
+  <div><span class="badge">All data and judgements are HYPOTHETICAL</span> <span class="badge" id="engine" style="background:var(--okbg);color:var(--ok)">Python engine</span></div>
+</header>
+<div class="layout">
+<aside>
+  <div class="card">
+    <h2>Controls</h2>
+    <label for="scen">Scenario</label>
+    <select id="scen"></select>
+    <div id="customBox"></div>
+    <label for="delta">Fuzzy spread &delta; <span id="deltaV" class="small"></span></label>
+    <input id="delta" type="range" min="0" max="3" step="0.25" value="1">
+    <div class="small">&delta; = 0 equals crisp AHP.</div>
+    <div class="row" style="margin-top:14px"><button id="reset">Restore example case</button><button id="csv">Download CSV</button></div>
+    <h3>Status</h3>
+    <div id="status"></div>
+  </div>
+</aside>
+<main>
+  <nav id="tabs"></nav>
+  <div id="errbox"></div>
+  <section class="panel" id="p-dash"></section>
+  <section class="panel" id="p-inputs"></section>
+  <section class="panel" id="p-weights"></section>
+  <section class="panel" id="p-scen"></section>
+  <section class="panel" id="p-sens"></section>
+  <section class="panel" id="p-ver"></section>
+  <section class="panel" id="p-guide"></section>
+</main>
+</div>
+<script>
+let META,ALT,GROUPS,CRIT,NC,NA,GO,SCEN,PAIRS;
+const ALTC = ["var(--a0)","var(--a1)","var(--a2)","var(--a3)"];
+const clone = o=>JSON.parse(JSON.stringify(o));
+const S = {vals:null, J:{}, delta:1, scen:"S1", custom:[.25,.25,.25,.25], tab:"dash", sensGroup:0, what:{alt:2,crit:0,pct:20}};
+function resetState(){
+  S.vals=CRIT.map(c=>c.vals.slice());
+  for(const k in PAIRS) S.J[k]=clone(PAIRS[k].def);
+  S.dv=clone(S.vals); S.dJ=clone(S.J); /* draft copies: edited on the Inputs tab, applied only when Apply Inputs is pressed */
+  S.delta=1; S.scen="S1"; S.custom=[.25,.25,.25,.25]; S.sensGroup=0; S.what={alt:2,crit:0,pct:20};
+}
+const argmax=a=>a.indexOf(Math.max(...a));
+const rankOrder=a=>a.map((v,i)=>[v,i]).sort((x,y)=>y[0]-x[0]).map(x=>x[1]);
+let R=null, reqId=0, lastError=null;
+/* The engine is Python. On a computer it runs behind app.py (server mode); on a static host such as GitHub Pages it runs
+   inside the browser with Pyodide (Python compiled to WebAssembly) and loads the same .py files that app.py uses. */
+const PYODIDE_VERSION="v0.26.4", PY_FILES=["case_text.py","independent_check.py","dss_core.py"];
+let ENGINE=null;
+function loadScript(src){return new Promise((ok,bad)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>bad(new Error("could not load "+src));document.head.appendChild(s)})}
+async function startEngine(setMsg){
+  try{
+    const r=await fetch("api/meta");
+    if(r.ok&&(r.headers.get("content-type")||"").includes("json")){
+      const meta=await r.json();
+      ENGINE={kind:"server",label:"Python engine (local server)",meta:async()=>meta,
+        analyze:async st=>{const res=await fetch("api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(st)});return res.json()}};
+      return ENGINE;
+    }
+  }catch(e){}
+  setMsg("Loading the Python engine in your browser (Pyodide). The first visit takes about 10-20 seconds...");
+  const base="https://cdn.jsdelivr.net/pyodide/"+PYODIDE_VERSION+"/full/";
+  await loadScript(base+"pyodide.js");
+  const py=await loadPyodide({indexURL:base});
+  setMsg("Loading NumPy...");
+  await py.loadPackage("numpy");
+  setMsg("Loading the DSS engine...");
+  py.runPython("import sys, os\nos.makedirs('/home/pyodide/dss', exist_ok=True)\nsys.path.insert(0, '/home/pyodide/dss')");
+  for(const f of PY_FILES){
+    const res=await fetch(f);
+    if(!res.ok) throw new Error("could not load "+f);
+    py.FS.writeFile("/home/pyodide/dss/"+f,await res.text());
+  }
+  py.runPython("import dss_core");
+  ENGINE={kind:"pyodide",label:"Python engine (Pyodide, in your browser)",
+    meta:async()=>JSON.parse(py.runPython("dss_core.web_meta_json()")),
+    analyze:async st=>{await new Promise(r=>setTimeout(r,30));py.globals.set("state_json",JSON.stringify(st));return JSON.parse(py.runPython("dss_core.web_analyze_json(state_json)"))}};
+  return ENGINE;
+}
+async function analyze(){
+  const id=++reqId;
+  try{
+    const st={vals:S.vals,J:S.J,delta:S.delta,scen:S.scen,custom:S.custom,sensGroup:S.sensGroup,what:S.what};
+    if(ENGINE.kind==="pyodide"){await new Promise(r=>setTimeout(r,40));if(id!==reqId)return null}
+    const data=await ENGINE.analyze(st);
+    if(id!==reqId) return null;
+    if(data.error){lastError=data.error;return null}
+    lastError=null;R=data;return data;
+  }catch(e){if(id===reqId)lastError="Cannot reach the Python engine: "+e.message;return null}
+}
+const f3=x=>x.toFixed(3), f4=x=>x.toFixed(4);
+const fmt=x=>Math.abs(x)>=100?Math.round(x).toLocaleString("en-IE"):String(+x.toFixed(2));
+
+/* ---------------- svg helpers ---------------- */
+function svgBars(items,{max=1,w=560,fmtv=f3,hl=-1}={}){
+  const rh=34,h=items.length*rh+6; let s=`<svg viewBox="0 0 ${w} ${h}" width="100%" role="img">`;
+  const lw=150,bw=w-lw-60;
+  items.forEach((it,i)=>{
+    const y=i*rh+4, l=Math.max(0,it.v/max)*bw;
+    s+=`<text x="0" y="${y+17}" font-size="13" ${i===hl?'font-weight="700"':''}>${it.label}</text>`;
+    s+=`<rect x="${lw}" y="${y+4}" width="${bw}" height="16" rx="3" fill="var(--grid)"/>`;
+    s+=`<rect x="${lw}" y="${y+4}" width="${l}" height="16" rx="3" fill="${it.color||"var(--accent)"}"/>`;
+    s+=`<text x="${lw+l+6}" y="${y+17}" font-size="12.5" font-weight="${i===hl?700:400}">${fmtv(it.v)}</text>`;
+  });
+  return s+"</svg>";
+}
+function svgGroup(cats,series,{w=640,h=300,max=1}={}){
+  const pl=40,pb=40,pt=10,pr=10,iw=w-pl-pr,ih=h-pb-pt,gw=iw/cats.length,bw=Math.min(34,gw/(series.length+1));
+  let s=`<svg viewBox="0 0 ${w} ${h}" width="100%" role="img">`;
+  for(let t=0;t<=4;t++){const v=max*t/4,y=pt+ih-ih*t/4;s+=`<line x1="${pl}" x2="${w-pr}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${pl-6}" y="${y+4}" font-size="11" text-anchor="end" class="mute">${v.toFixed(2)}</text>`}
+  cats.forEach((c,ci)=>{
+    const x0=pl+gw*ci+gw/2-bw*series.length/2;
+    series.forEach((sr,si)=>{const v=sr.vals[ci],bh=ih*v/max;
+      s+=`<rect x="${x0+si*bw}" y="${pt+ih-bh}" width="${bw-3}" height="${bh}" rx="3" fill="${sr.color}"/>`;
+      s+=`<text x="${x0+si*bw+(bw-3)/2}" y="${pt+ih-bh-4}" font-size="10" text-anchor="middle">${v.toFixed(2)}</text>`});
+    s+=`<text x="${pl+gw*ci+gw/2}" y="${h-16}" font-size="12" text-anchor="middle">${c}</text>`;
+  });
+  return s+"</svg>";
+}
+function svgLines(xs,series,{w=640,h=300,xlab="",marks=[],xfmt=x=>x.toFixed(2)}={}){
+  const pl=44,pb=44,pt=10,pr=14,iw=w-pl-pr,ih=h-pb-pt,x0=xs[0],x1=xs[xs.length-1];
+  const X=x=>pl+iw*(x-x0)/(x1-x0), Y=v=>pt+ih-ih*v;
+  let s=`<svg viewBox="0 0 ${w} ${h}" width="100%" role="img">`;
+  for(let t=0;t<=4;t++){const y=Y(t/4);s+=`<line x1="${pl}" x2="${w-pr}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${pl-6}" y="${y+4}" font-size="11" text-anchor="end" class="mute">${(t/4).toFixed(2)}</text>`}
+  const nt=Math.min(6,xs.length-1);
+  for(let t=0;t<=nt;t++){const xv=x0+(x1-x0)*t/nt;s+=`<text x="${X(xv)}" y="${h-pb+16}" font-size="11" text-anchor="middle" class="mute">${xfmt(xv)}</text>`}
+  s+=`<text x="${pl+iw/2}" y="${h-6}" font-size="12" text-anchor="middle">${xlab}</text>`;
+  marks.forEach((m,mi)=>{s+=`<line x1="${X(m.x)}" x2="${X(m.x)}" y1="${pt}" y2="${pt+ih}" stroke="${m.color||"var(--mute)"}" stroke-dasharray="4 3"/><text x="${X(m.x)+4}" y="${pt+12+mi*14}" font-size="11" class="mute">${m.label}</text>`});
+  series.forEach(sr=>{s+=`<polyline fill="none" stroke="${sr.color}" stroke-width="2.4" points="${xs.map((x,i)=>X(x)+","+Y(sr.vals[i])).join(" ")}"/>`});
+  return s+"</svg>";
+}
+const legend=()=>`<div class="legend">${ALT.map((a,i)=>`<span><i style="background:${ALTC[i]}"></i>${a}</span>`).join("")}</div>`;
+
+/* ---------------- panels ---------------- */
+function winnerInfo(C){const o=rankOrder(C);return {o,w:o[0],lead:C[o[0]]-C[o[1]]}}
+function statusPills(){
+  const crOk=Object.values(R.crs).every(c=>c<0.10);
+  const sumOk=Math.abs(R.w.reduce((a,b)=>a+b,0)-1)<1e-6;
+  const inOk=S.vals.every((row,j)=>row.every(v=>isFinite(v)&&v>0&&(CRIT[j].max==null||v<=CRIT[j].max)));
+  const p=(ok,t)=>`<div class="row" style="margin:4px 0"><span>${t}</span><span class="pill ${ok?"ok":"bad"}">${ok?"OK":"CHECK"}</span></div>`;
+  return p(inOk,"Input data")+p(crOk,"Judgement consistency")+p(sumOk,"Weights sum to 1");
+}
+function dash(){
+  const wi=winnerInfo(R.C), sawW=argmax(R.SW), agree=sawW===wi.w;
+  const sc=SCEN.find(s=>s.k===S.scen).name;
+  let h=`<div class="card"><h2>Ranking for ${sc}</h2>`;
+  h+=`<div class="msg ${wi.lead<0.05?"warn":"ok"}"><b>${ALT[wi.w]}</b> ranks first (C = ${f3(R.C[wi.w])}); runner-up is ${ALT[wi.o[1]]} (C = ${f3(R.C[wi.o[1]])}), a lead of ${f3(wi.lead)}.${wi.lead<0.05?" <b>Close call:</b> the lead is below 0.05, so treat the choice with care.":""}</div>`;
+  h+=`<div class="grid4">${wi.o.map((i,r)=>`<div class="rank ${r===0?"win":""}"><div class="n">Rank ${r+1}</div><div class="name" style="color:${ALTC[i]}">${ALT[i]}</div><div class="v">${f3(R.C[i])}</div><div class="small">closeness C</div></div>`).join("")}</div></div>`;
+  h+=`<div class="two"><div class="card"><h2>TOPSIS closeness</h2>${svgBars(wi.o.map(i=>({label:ALT[i],v:R.C[i],color:ALTC[i]})),{hl:0})}</div>`;
+  h+=`<div class="card"><h2>Cross-check with SAW</h2>${svgBars(rankOrder(R.SW).map(i=>({label:ALT[i],v:R.SW[i],color:ALTC[i]})),{hl:0})}<div class="msg ${agree?"ok":"warn"}">${agree?"SAW and TOPSIS agree on the top choice.":`<b>SAW disagrees:</b> it ranks ${ALT[sawW]} first (${f3(R.SW[sawW])}). SAW is fully compensatory, so a strong score on rent can offset weak foot traffic. Discuss this difference before deciding.`}</div></div></div>`;
+  h+=`<div class="card"><h2>Why this result? Final sub-criterion weights</h2>${svgBars(CRIT.map((c,j)=>({label:c.id+" "+c.name,v:R.w[j],color:"var(--accent)"})),{max:Math.max(...R.w)*1.15,fmtv:f3})}<div class="small">Weight = group weight (${GROUPS.map((g,i)=>g+" "+f3(R.gs[i])).join(", ")}) x local weight.</div></div>`;
+  return h;
+}
+function inputs(){
+  let h=`<div class="card"><div class="row"><button id="applyBtn" class="primary">Apply Inputs</button><button id="clearBtn">Reset inputs (set everything to 0)</button></div><div id="applymsg" class="small" style="margin-top:8px">Edit the values and judgements below, then press Apply Inputs. Nothing is calculated until you press Apply Inputs.</div></div>`;
+  h+=`<div class="card"><h2>Decision matrix (hypothetical, editable)</h2><div class="tbl"><table><tr><th>Sub-criterion</th><th>Type</th><th>Unit</th>${ALT.map(a=>`<th>${a}</th>`).join("")}</tr>`;
+  CRIT.forEach((c,j)=>{h+=`<tr><td>${c.id} ${c.name}</td><td>${c.type}</td><td>${c.unit}</td>${ALT.map((_,i)=>`<td><input type="number" step="any" min="${c.min}" ${c.max!=null?`max="${c.max}"`:""} data-j="${j}" data-i="${i}" value="${S.dv[j][i]}"></td>`).join("")}</tr>`});
+  h+=`</table></div><div class="small">Benefit: higher is better. Cost: lower is better. Values must be positive; scales have fixed limits.</div></div>`;
+  h+=`<div class="card"><h2>Expert judgements (hypothetical)</h2><div class="small">Move a slider towards the more important item. 0 = equally important; each step is one point on the 1-9 Saaty scale.</div>`;
+  for(const k in PAIRS){const P=PAIRS[k];
+    h+=`<h3>${P.title} <span id="cr-${k}" class="pill"></span></h3>`;
+    for(let i=0;i<P.n;i++)for(let j=i+1;j<P.n;j++){
+      const v=S.dJ[k][i+"-"+j], sl=v>=1?v-1:-(1/v-1);
+      h+=`<div class="pair"><span>${P.names[i]} vs ${P.names[j]}</span><input type="range" min="-8" max="8" step="1" value="${sl}" data-k="${k}" data-p="${i}-${j}"><span id="jl-${k}-${i}-${j}" class="small"></span></div>`;
+    }}
+  h+=`<div class="small" style="margin-top:8px">Cost has a single sub-criterion (Rent), so it needs no comparison.</div></div>`;
+  return h;
+}
+function judgeLabel(k,p){const v=S.dJ[k][p],[i,j]=p.split("-").map(Number),n=PAIRS[k].names;if(v===1)return "equal";return v>1?`${n[i]} x${v}`:`${n[j]} x${+(1/v).toFixed(0)}`}
+function updateJudgeLabels(){
+  for(const k in PAIRS){const P=PAIRS[k];
+    for(let i=0;i<P.n;i++)for(let j=i+1;j<P.n;j++){const e=document.getElementById(`jl-${k}-${i}-${j}`);if(e)e.textContent=judgeLabel(k,i+"-"+j)}
+    const c=document.getElementById("cr-"+k);if(c){const v=R.crs[k];c.className="pill "+(v<0.1?"ok":"bad");c.textContent=P.n<3?"2x2: consistent":"CR = "+f3(v)+(v<0.1?" OK":" REVISE")}}
+}
+function hierarchySvg(){
+  const W=900,H=370,gx=W/4;let lines="",boxes="";
+  const box=(x,y,w,h,txt,sub,fill)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="${fill}" stroke="var(--line)"/><text x="${x+w/2}" y="${y+(sub?h/2-3:h/2+5)}" text-anchor="middle" font-size="13" font-weight="600">${txt}</text>${sub?`<text x="${x+w/2}" y="${y+h/2+14}" text-anchor="middle" font-size="11.5" class="mute">${sub}</text>`:""}`;
+  boxes+=box(W/2-190,6,380,34,"Best location for a new convenience & specialty store","","var(--okbg)");
+  const gcol=["#dbe8fb","#fdebd2","#d9f2ed","#ebe2f8"];
+  GROUPS.forEach((g,i)=>{const cx=gx*i+gx/2;lines+=`<line x1="${W/2}" y1="40" x2="${cx}" y2="82" stroke="var(--mute)"/>`;boxes+=box(cx-95,82,190,40,g,"weight "+f3(R.wt.g[i]),gcol[i])});
+  GROUPS.forEach((_,i)=>{const cx=gx*i+gx/2;CRIT.map((c,j)=>j).filter(j=>GO[j]===i).forEach((j,k)=>{const y=150+k*44;lines+=`<line x1="${cx}" y1="122" x2="${cx}" y2="${y+18}" stroke="var(--mute)"/>`;boxes+=box(cx-95,y,190,36,CRIT[j].id+" "+CRIT[j].name,"final "+f3(R.base[j]),"var(--card)")})});
+  let alts=`<text x="0" y="${H-52}" font-size="12" class="mute">Alternatives evaluated with TOPSIS:</text>`;
+  ALT.forEach((a,i)=>{alts+=box(i*(W/4)+10,H-40,W/4-20,32,a,"",gcol[i])});
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:900px" role="img">${lines}${boxes}${alts}</svg>`;
+}
+function fuzzyDetail(){
+  let h="";
+  ["top","dem","com","acc"].forEach(k=>{const a=R.ahp[k],P=PAIRS[k];
+    if(P.n<2)return;
+    h+=`<h3>${P.title}: CR = ${P.n<3?"2x2, consistent":f3(a.cr)} (lambda max ${a.lam.toFixed(3)})</h3><div class="tbl"><table><tr><th>Item</th><th>Crisp GM weight</th><th>Fuzzy weight (l, m, u)</th><th>Centroid</th><th>Local weight</th></tr>${P.names.map((n,i)=>`<tr><td>${n}</td><td>${f3(a.w[i])}</td><td>(${f3(a.fz.l[i])}, ${f3(a.fz.m[i])}, ${f3(a.fz.u[i])})</td><td>${f3(a.fz.d[i])}</td><td><b>${f3(a.fz.w[i])}</b></td></tr>`).join("")}</table></div>`;});
+  return h;
+}
+function weightsPanel(){
+  const g=R.wt.g;
+  let h=`<div class="card" id="hier"><h2>Decision hierarchy</h2>${hierarchySvg()}<div class="small">Final weight = group weight x local weight (Fuzzy AHP, &delta; = ${S.delta}). Cost has one sub-criterion, so its local weight is 1.</div></div>`;
+  h+=`<div class="two"><div class="card"><h2>Group weights (Fuzzy AHP)</h2>${svgBars(GROUPS.map((n,i)=>({label:n,v:g[i],color:"var(--accent)"})),{max:Math.max(...g)*1.15})}</div>`;
+  h+=`<div class="card"><h2>Local and final weights</h2><div class="tbl"><table><tr><th>Sub-criterion</th><th>Group</th><th>Local</th><th>Final</th></tr>${CRIT.map((c,j)=>`<tr><td>${c.id} ${c.name}</td><td>${GROUPS[c.g]}</td><td>${f3(R.wt.L[j])}</td><td>${f3(R.base[j])}</td></tr>`).join("")}<tr><th>Total</th><th></th><th></th><th>${f3(R.base.reduce((a,b)=>a+b,0))}</th></tr></table></div></div></div>`;
+  h+=`<div class="card" id="fzcard"><h2>Fuzzy AHP detail</h2><div class="small">Triangular fuzzy number (max(1, a-&delta;), a, a+&delta;); Buckley fuzzy geometric mean; centroid defuzzification; normalisation.</div>${fuzzyDetail()}</div>`;
+  const cf=R.crispBase;
+  h+=`<div class="card"><h2>Fuzzy vs crisp AHP final weights</h2><div class="tbl"><table><tr><th>Sub-criterion</th><th>Fuzzy (&delta; = ${S.delta})</th><th>Crisp (&delta; = 0)</th></tr>${CRIT.map((c,j)=>`<tr><td>${c.id} ${c.name}</td><td>${f4(R.base[j])}</td><td>${f4(cf[j])}</td></tr>`).join("")}</table></div></div>`;
+  return h;
+}
+function scenPanel(){
+  let h=`<div class="card"><h2>TOPSIS closeness by scenario</h2>${legend()}${svgGroup(R.all.map(a=>a.k+" "+a.name.replace(/^S\d /,"").replace(" (Fuzzy AHP)","").replace(" (extra)","")),ALT.map((a,i)=>({color:ALTC[i],vals:R.all.map(s=>s.C[i])})),{w:760})}</div>`;
+  h+=`<div class="card"><h2>Group weights and winners</h2><div class="tbl"><table><tr><th>Scenario</th>${GROUPS.map(g=>`<th>${g}</th>`).join("")}${ALT.map(a=>`<th>${a}</th>`).join("")}<th>Winner</th></tr>`;
+  R.all.forEach(s=>{const wi=argmax(s.C);h+=`<tr><td>${s.name}</td>${s.gs.map(x=>`<td>${f3(x)}</td>`).join("")}${s.C.map((x,i)=>`<td ${i===wi?'style="font-weight:700"':""}>${f3(x)}</td>`).join("")}<td style="text-align:left"><b>${ALT[wi]}</b></td></tr>`});
+  h+=`</table></div><div class="small">S1 uses the group weights derived from the Fuzzy AHP judgements. S2-S5 are preset management priorities and Custom lets you set the group weights yourself. Local weights stay fixed in all scenarios.</div></div>`;
+  return h;
+}
+function sensPanel(){
+  const sn=R.sens, baseWin=argmax(R.Cb), k=sn.group;
+  let h=`<div class="card"><div class="small">Sensitivity tests use the baseline (S1) weights and the current data. Baseline winner: <b>${ALT[baseWin]}</b>. All numbers are calculated by the Python engine.</div></div>`;
+  const ser=ALT.map((_,i)=>({color:ALTC[i],vals:sn.sweep.map(r=>r[i])}));
+  const marks=[{x:R.wt.g[k],label:"baseline"}];for(const d in sn.switch)marks.push({x:sn.switch[d],label:"switch "+sn.switch[d].toFixed(2),color:"var(--bad)"});
+  h+=`<div class="card"><div class="row"><h2>A. Group weight sweep</h2><select id="sg" style="width:auto">${GROUPS.map((g,i)=>`<option value="${i}" ${i===k?"selected":""}>${g}</option>`).join("")}</select></div>${legend()}${svgLines(sn.xs,ser,{xlab:GROUPS[k]+" group weight (other groups rescaled proportionally)",marks})}<div class="small">${Object.keys(sn.switch).length?"The winner changes at "+Object.values(sn.switch).map(v=>v.toFixed(3)).join(" and ")+".":"No change of winner anywhere between 0 and 1."}</div></div>`;
+  h+=`<div class="card"><h2>B. One-at-a-time sub-criterion weight change</h2><div class="small">Each cell shows the winner after multiplying one weight by the factor and re-normalising. Red = winner differs from baseline.</div><div class="tbl"><table><tr><th>Sub-criterion</th>${sn.facs.map(f=>`<th>x${f}</th>`).join("")}</tr>`;
+  CRIT.forEach((c,j)=>{h+=`<tr><td>${c.id} ${c.name}</td>${sn.oat[j].map(win=>`<td class="${win!==baseWin?"cell-ch":""}">${ALT[win]}</td>`).join("")}</tr>`});
+  h+=`</table></div></div>`;
+  const Cw=sn.what, wh=S.what;
+  h+=`<div class="card"><h2>C. Data what-if</h2><div class="row" style="flex-wrap:wrap;justify-content:flex-start">
+   <select id="wa" style="width:auto">${ALT.map((a,i)=>`<option value="${i}" ${i===wh.alt?"selected":""}>${a}</option>`).join("")}</select>
+   <select id="wc" style="width:auto">${CRIT.map((c,j)=>`<option value="${j}" ${j===wh.crit?"selected":""}>${c.id} ${c.name}</option>`).join("")}</select>
+   <span>change <b id="wpv">${wh.pct>0?"+":""}${wh.pct}%</b></span><input id="wp" type="range" min="-50" max="50" step="5" value="${wh.pct}" style="width:200px"></div>
+   ${svgBars(rankOrder(Cw).map(i=>({label:ALT[i],v:Cw[i],color:ALTC[i]})),{hl:0})}<div class="msg ${argmax(Cw)===baseWin?"ok":"bad"}">${argmax(Cw)===baseWin?"The winner does not change.":"<b>The winner changes</b> to "+ALT[argmax(Cw)]+"."}</div></div>`;
+  const ex=sn.exh;
+  h+=`<div class="card"><h2>D. Exhaustive data test and fuzzy spread</h2><div class="msg ${ex.changed?"warn":"ok"}">Each of the ${NA*NC} data values changed by -20% and +20% (${ex.runs} runs): the winner changed in <b>${ex.changed}</b> run${ex.changed===1?"":"s"}.</div>`;
+  h+=`<div class="tbl"><table><tr><th>&delta;</th><th>Demand weight</th>${ALT.map(a=>`<th>${a}</th>`).join("")}<th>Winner</th></tr>${sn.deltas.map(d=>`<tr><td>${d.delta}</td><td>${f3(d.demand)}</td>${d.C.map(x=>`<td>${f3(x)}</td>`).join("")}<td style="text-align:left"><b>${ALT[d.win]}</b></td></tr>`).join("")}</table></div></div>`;
+  return h;
+}
+function isDefault(){
+  return CRIT.every((c,j)=>c.vals.every((v,i)=>S.vals[j][i]===v))&&Object.keys(PAIRS).every(k=>Object.keys(PAIRS[k].def).every(p=>S.J[k][p]===PAIRS[k].def[p]))&&S.delta===1;
+}
+function verPanel(){
+  let h=`<div class="card"><h2>Automatic verification</h2><div class="small">These checks run in the Python engine every time an input changes. The independent implementation is a second, loop-based version of Fuzzy AHP, TOPSIS and SAW written without NumPy (independent_check.py).</div><div class="tbl"><table><tr><th>Check</th><th style="text-align:left">Result</th><th>Status</th></tr>`;
+  R.verify.forEach(c=>{h+=`<tr><td>${c.name}</td><td style="text-align:left">${c.detail}</td><td><span class="pill ${c.status==="OK"?"ok":"bad"}">${c.status}</span></td></tr>`});
+  h+=`</table></div></div>`;
+  const wi=winnerInfo(R.Cb), sawW=argmax(R.SW);
+  h+=`<div class="card"><h2>SAW cross-check (baseline weights)</h2><div class="msg ${sawW===wi.w?"ok":"warn"}">${sawW===wi.w?"SAW and TOPSIS choose the same location.":`TOPSIS chooses <b>${ALT[wi.w]}</b> and SAW chooses <b>${ALT[sawW]}</b>. SAW is fully compensatory, so a strong score on one criterion offsets a weak one; the difference is a trade-off to discuss.`}</div><div class="tbl"><table><tr><th>Location</th><th>SAW score</th><th>SAW rank</th><th>TOPSIS rank</th></tr>${ALT.map((a,i)=>`<tr><td>${a}</td><td>${f3(R.SW[i])}</td><td>${rankOrder(R.SW).indexOf(i)+1}</td><td>${rankOrder(R.Cb).indexOf(i)+1}</td></tr>`).join("")}</table></div></div>`;
+  return h;
+}
+function guide(){return `<div class="card"><h2>User guide</h2><ol>
+<li><b>Dashboard:</b> choose a scenario on the left. The ranking, closeness bars, SAW cross-check and a recommendation sentence update at once. A close-call warning appears when the lead is below 0.05.</li>
+<li><b>Inputs:</b> edit the hypothetical decision matrix or move the judgement sliders, then press <b>Apply Inputs</b> to re-run the DSS. <b>Reset inputs</b> sets every value to 0 (and every judgement to equal) so you can enter a new case; all values must be positive before Apply Inputs will run. The consistency ratio (CR) of each comparison matrix must stay below 0.10.</li>
+<li><b>Fuzzy spread &delta;:</b> the width of the triangular fuzzy numbers. &delta; = 0 is crisp AHP.</li>
+<li><b>Custom scenario:</b> choose "Custom group weights" and set the four group weights. They are normalised to sum to 1.</li>
+<li><b>Sensitivity:</b> test how weights, data and &delta; change the winner. Red cells mark a different winner.</li>
+<li><b>Verification:</b> integrity checks, an independent plain-Python re-implementation, unit and order tests, and the SAW cross-check. All rows should show OK.</li>
+<li><b>Download CSV</b> saves the current ranking and weights. <b>Restore example case</b> (left) brings back the original hypothetical case.</li></ol>
+<p class="small">Method: criteria collected from twelve journal papers and narrowed by a simulated (hypothetical) Delphi panel; Fuzzy AHP (Buckley geometric mean, triangular fuzzy numbers) for weights; TOPSIS for ranking; SAW for cross-check. The Python engine (dss_core.py) does every calculation.</p></div>`}
+
+/* ---------------- wiring ---------------- */
+const TABS=[["dash","Dashboard"],["inputs","Inputs"],["weights","Weights"],["scen","Scenarios"],["sens","Sensitivity"],["ver","Verification"],["guide","Guide"]];
+function renderTabs(){
+  document.getElementById("tabs").innerHTML=TABS.map(([k,n])=>`<button data-t="${k}" class="${S.tab===k?"on":""}">${n}</button>`).join("");
+  TABS.forEach(([k])=>document.getElementById("p-"+k).classList.toggle("on",S.tab===k));
+}
+function renderCustom(){
+  const b=document.getElementById("customBox");
+  if(S.scen!=="C"){b.innerHTML="";return}
+  b.innerHTML=GROUPS.map((g,i)=>`<label>${g} <span class="small" id="cv${i}">${S.custom[i].toFixed(2)}</span></label><input type="range" min="0.05" max="1" step="0.05" value="${S.custom[i]}" data-c="${i}">`).join("")+`<div class="small">Normalised to sum to 1.</div>`;
+}
+async function update(){
+  document.getElementById("deltaV").textContent="= "+S.delta;
+  const ok=await analyze();
+  const eb=document.getElementById("errbox");
+  if(!ok){eb.innerHTML=lastError?`<div class="msg bad"><b>Python engine:</b> ${lastError}</div>`:"";return}
+  eb.innerHTML="";
+  document.getElementById("status").innerHTML=statusPills();
+  document.getElementById("p-dash").innerHTML=dash();
+  document.getElementById("p-weights").innerHTML=weightsPanel();
+  document.getElementById("p-scen").innerHTML=scenPanel();
+  document.getElementById("p-sens").innerHTML=sensPanel();
+  document.getElementById("p-ver").innerHTML=verPanel();
+  updateJudgeLabels();
+  bindSens();
+}
+function bindSens(){
+  const q=id=>document.getElementById(id);
+  q("sg").onchange=e=>{S.sensGroup=+e.target.value;update()};
+  q("wa").onchange=e=>{S.what.alt=+e.target.value;update()};
+  q("wc").onchange=e=>{S.what.crit=+e.target.value;update()};
+  q("wp").oninput=e=>{S.what.pct=+e.target.value;update()};
+}
+async function loadMeta(){
+  const msg=document.getElementById("errbox");
+  ENGINE=await startEngine(m=>{msg.innerHTML=`<div class="msg warn">${m}</div>`});
+  msg.innerHTML="";
+  const eb=document.getElementById("engine");if(eb)eb.textContent=ENGINE.label;
+  META=await ENGINE.meta();
+  ALT=META.alt;GROUPS=META.groups;CRIT=META.crit;SCEN=META.scen;PAIRS=META.pairs;
+  NC=CRIT.length;NA=ALT.length;GO=CRIT.map(c=>c.g);
+  const titles={top:"Main criteria",dem:"Demand sub-criteria",com:"Competition sub-criteria",acc:"Accessibility sub-criteria"};
+  for(const k in PAIRS){PAIRS[k].n=PAIRS[k].names.length;PAIRS[k].title=titles[k]}
+  resetState();
+}
+function init(){
+  document.getElementById("scen").innerHTML=SCEN.map(s=>`<option value="${s.k}">${s.name}</option>`).join("");
+  document.getElementById("p-guide").innerHTML=guide();
+  document.getElementById("p-inputs").innerHTML=inputs();
+  renderTabs();renderCustom();update();
+  document.getElementById("scen").value=S.scen;document.getElementById("delta").value=S.delta;
+}
+document.getElementById("scen").onchange=e=>{S.scen=e.target.value;renderCustom();update()};
+document.getElementById("delta").oninput=e=>{S.delta=+e.target.value;update()};
+document.getElementById("tabs").onclick=e=>{const t=e.target.dataset.t;if(t){S.tab=t;renderTabs()}};
+document.getElementById("customBox").oninput=e=>{const i=e.target.dataset.c;if(i!==undefined){S.custom[+i]=+e.target.value;const s=S.custom.reduce((a,b)=>a+b,0);document.getElementById("cv"+i).textContent=e.target.value;update()}};
+const applyMsg=(t,cls)=>{const m=document.getElementById("applymsg");if(m){m.className="small msg "+(cls||"warn");m.textContent=t}};
+function markDirty(){applyMsg("Unapplied changes. Press Apply Inputs to re-run the DSS with these inputs.","warn")}
+document.getElementById("p-inputs").addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.k){const sl=+t.value;S.dJ[t.dataset.k][t.dataset.p]=sl>=0?1+sl:1/(1+Math.abs(sl));
+    const l=document.getElementById(`jl-${t.dataset.k}-${t.dataset.p.replace("-","-")}`);if(l)l.textContent=judgeLabel(t.dataset.k,t.dataset.p);markDirty()}
+  else if(t.dataset.j!==undefined){const v=parseFloat(t.value);S.dv[+t.dataset.j][+t.dataset.i]=isFinite(v)?v:NaN;t.style.outline="";markDirty()}
+});
+function validDraft(){
+  const bad=[];
+  CRIT.forEach((c,j)=>ALT.forEach((a,i)=>{const v=S.dv[j][i];
+    if(!(isFinite(v)&&v>0&&v>=c.min&&(c.max==null||v<=c.max))) bad.push([j,i])}));
+  return bad;
+}
+document.getElementById("p-inputs").addEventListener("click",async e=>{
+  if(e.target.id==="clearBtn"){
+    S.dv=CRIT.map(()=>ALT.map(()=>0));
+    for(const k in PAIRS) for(const p in S.dJ[k]) S.dJ[k][p]=1;
+    document.getElementById("p-inputs").innerHTML=inputs();
+    for(const k in PAIRS){const P=PAIRS[k];for(let i=0;i<P.n;i++)for(let j=i+1;j<P.n;j++){const l=document.getElementById(`jl-${k}-${i}-${j}`);if(l)l.textContent=judgeLabel(k,i+"-"+j)}}
+    document.querySelectorAll("#p-inputs input[data-j]").forEach(x=>x.style.outline="2px solid var(--bad)");
+    applyMsg("All inputs are now 0 (judgements: equal). Enter the new values, then press Apply Inputs. The results shown elsewhere still belong to the previous inputs.","warn");
+  }
+  if(e.target.id==="applyBtn"){
+    const bad=validDraft();
+    document.querySelectorAll("#p-inputs input[data-j]").forEach(x=>x.style.outline="");
+    if(bad.length){
+      bad.forEach(([j,i])=>{const x=document.querySelector(`#p-inputs input[data-j="${j}"][data-i="${i}"]`);if(x)x.style.outline="2px solid var(--bad)"});
+      applyMsg(bad.length+" value(s) are missing, zero or outside the allowed range (marked in red). The DSS was not re-run; fix them and press Apply Inputs again.","bad");
+      return;
+    }
+    S.vals=clone(S.dv);S.J=clone(S.dJ);
+    applyMsg("Running the DSS...","warn");
+    await update();
+    applyMsg(lastError?("Not applied: "+lastError):"Applied. The DSS was re-run with these inputs (see the Dashboard).",lastError?"bad":"ok");
+  }
+});
+document.getElementById("reset").onclick=()=>{resetState();init()};
+document.getElementById("csv").onclick=()=>{
+  const wi=rankOrder(R.C);
+  let c="Scenario,"+SCEN.find(s=>s.k===S.scen).name+"\nDelta,"+S.delta+"\n\nRank,Location,Closeness,SAW\n";
+  wi.forEach((i,r)=>c+=`${r+1},${ALT[i]},${R.C[i].toFixed(4)},${R.SW[i].toFixed(4)}\n`);
+  c+="\nSub-criterion,Group,Final weight (active scenario)\n";CRIT.forEach((x,j)=>c+=`${x.id} ${x.name},${GROUPS[x.g]},${R.w[j].toFixed(4)}\n`);
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([c],{type:"text/csv"}));a.download="retail_location_dss_results.csv";a.click();
+};
+window.DSS={S,analyze:()=>analyze()};
+loadMeta().then(init).catch(e=>{document.getElementById("errbox").innerHTML='<div class="msg bad"><b>Cannot start the Python engine.</b> '+e.message+'. On a computer you can also run <code>python app.py</code> and open http://127.0.0.1:8501/. On a web host the page needs internet access to load Pyodide.</div>'});
+</script>
+</body>
+</html>
